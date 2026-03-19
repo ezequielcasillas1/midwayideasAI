@@ -1,6 +1,5 @@
 'use client'
 
-import { use } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
@@ -21,9 +20,8 @@ import { Button, Badge, CategoryBadge, Card } from '@/components/ui'
 import { MidwayMeter } from '@/components/MidwayMeter'
 import { useListing } from '@/hooks'
 
-export default function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
-  const { listing, loading, error } = useListing(resolvedParams.id)
+export default function ListingDetailPage({ params }: { params: { id: string } }) {
+  const { listing, loading, error } = useListing(params.id)
 
   if (loading) {
     return (

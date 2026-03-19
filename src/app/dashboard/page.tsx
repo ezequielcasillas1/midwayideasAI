@@ -9,6 +9,7 @@ import { Navbar } from '@/components'
 import { Button, Card, Badge, CategoryBadge } from '@/components/ui'
 import { MidwayMeter } from '@/components/MidwayMeter'
 import { useAuth, useMyListings, useDeleteListing } from '@/hooks'
+import { USE_MOCK_DATA } from '@/lib/mockData'
 import type { Listing } from '@/types'
 
 function ListingRow({ listing, onDelete }: { listing: Listing; onDelete: (id: string) => void }) {
@@ -76,7 +77,7 @@ export default function DashboardPage() {
   const { deleteListing } = useDeleteListing()
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!USE_MOCK_DATA && !authLoading && !user) {
       router.push('/auth/login')
     }
   }, [user, authLoading, router])
@@ -92,7 +93,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (authLoading || !user) {
+  if (!USE_MOCK_DATA && (authLoading || !user)) {
     return (
       <div className="min-h-screen bg-zinc-950">
         <Navbar />

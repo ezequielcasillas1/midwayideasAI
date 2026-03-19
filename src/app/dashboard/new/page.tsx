@@ -1,21 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Save, Plus, X } from 'lucide-react'
-import { Navbar } from '@/components'
+import { ArrowLeft, Save, Plus, X, Upload, ImageIcon, Lightbulb } from 'lucide-react'
+import { Navbar, SellingAdviceModal } from '@/components'
 import { Button, Input, Select, Card } from '@/components/ui'
 import { MidwayMeter } from '@/components/MidwayMeter'
 import { useAuth, useCreateListing } from '@/hooks'
 import type { Category, ListingStatus } from '@/types'
 
+const MAX_IMAGES = 3
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
+
 const categoryOptions = [
   { value: 'webapp', label: 'Web App' },
+  { value: 'website', label: 'Website (Agency, E-commerce, etc.)' },
+  { value: 'extension', label: 'Web App Extension' },
+  { value: 'desktop', label: 'Desktop App' },
   { value: 'mobile', label: 'Mobile App' },
   { value: 'game', label: 'Game' },
   { value: 'api', label: 'API / Backend' },
+  { value: 'os', label: 'Operating System' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -24,10 +32,16 @@ const statusOptions = [
   { value: 'active', label: 'Active (visible to all)' },
 ]
 
+interface ImagePreview {
+  file: File
+  url: string
+}
+
 export default function NewListingPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { createListing, loading: createLoading } = useCreateListing()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -40,12 +54,65 @@ export default function NewListingPage() {
   const [demoUrl, setDemoUrl] = useState('')
   const [status, setStatus] = useState<ListingStatus>('draft')
   const [error, setError] = useState('')
+  const [images, setImages] = useState<ImagePreview[]>([])
+  const [dragActive, setDragActive] = useState(false)
+  const [showAdvice, setShowAdvice] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/auth/login')
     }
   }, [user, authLoading, router])
+
+  useEffect(() => {
+    return () => {
+      images.forEach((img) => URL.revokeObjectURL(img.url))
+    }
+  }, [images])
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return
+
+    const validFiles: ImagePreview[] = []
+    const remainingSlots = MAX_IMAGES - images.length
+
+    Array.from(files).slice(0, remainingSlots).forEach((file) => {
+      if (ACCEPTED_TYPES.includes(file.type)) {
+        validFiles.push({
+          file,
+          url: URL.createObjectURL(file),
+        })
+      }
+    })
+
+    if (validFiles.length > 0) {
+      setImages((prev) => [...prev, ...validFiles])
+    }
+  }
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    handleFiles(e.dataTransfer.files)
+  }
+
+  const removeImage = (index: number) => {
+    setImages((prev) => {
+      URL.revokeObjectURL(prev[index].url)
+      return prev.filter((_, i) => i !== index)
+    })
+  }
 
   const addTech = () => {
     if (techInput.trim() && !techStack.includes(techInput.trim())) {
@@ -58,6 +125,15 @@ export default function NewListingPage() {
     setTechStack(techStack.filter((t) => t !== tech))
   }
 
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -68,6 +144,10 @@ export default function NewListingPage() {
     }
 
     try {
+      const imageUrls = await Promise.all(
+        images.map((img) => convertToBase64(img.file))
+      )
+
       await createListing({
         title,
         description,
@@ -77,7 +157,7 @@ export default function NewListingPage() {
         tech_stack: techStack,
         repo_url: repoUrl || null,
         demo_url: demoUrl || null,
-        images: [],
+        images: imageUrls,
         status,
       })
       router.push('/dashboard')
@@ -111,7 +191,18 @@ export default function NewListingPage() {
         </Link>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="mb-8 text-3xl font-bold text-white">Create New Listing</h1>
+          <div className="mb-8 flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-white">Create New Listing</h1>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowAdvice(true)}
+              className="gap-2"
+            >
+              <Lightbulb className="h-4 w-4" />
+              Advice on Selling
+            </Button>
+          </div>
 
           <form onSubmit={handleSubmit}>
             <Card hover={false} className="mb-6 p-6">
@@ -159,6 +250,84 @@ export default function NewListingPage() {
                   />
                 </div>
               </div>
+            </Card>
+
+            <Card hover={false} className="mb-6 p-6">
+              <h2 className="mb-6 text-lg font-semibold text-white">Project Images</h2>
+              <p className="mb-4 text-sm text-zinc-400">
+                Add up to {MAX_IMAGES} images (PNG or JPEG). First image will be the cover.
+              </p>
+
+              <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => images.length < MAX_IMAGES && fileInputRef.current?.click()}
+                className={`relative cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+                  dragActive
+                    ? 'border-violet-500 bg-violet-500/10'
+                    : images.length >= MAX_IMAGES
+                    ? 'cursor-not-allowed border-zinc-700 bg-zinc-800/30'
+                    : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800/50'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".png,.jpg,.jpeg"
+                  multiple
+                  onChange={(e) => handleFiles(e.target.files)}
+                  className="hidden"
+                  disabled={images.length >= MAX_IMAGES}
+                />
+                <Upload className="mx-auto mb-3 h-8 w-8 text-zinc-500" />
+                {images.length >= MAX_IMAGES ? (
+                  <p className="text-sm text-zinc-500">Maximum images reached</p>
+                ) : (
+                  <>
+                    <p className="text-sm text-zinc-300">
+                      Drag & drop or click to upload
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      PNG, JPEG up to 5MB each
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {images.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {images.map((img, index) => (
+                    <div
+                      key={img.url}
+                      className="group relative aspect-video overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={`Preview ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      {index === 0 && (
+                        <span className="absolute left-2 top-2 rounded bg-violet-600 px-2 py-0.5 text-xs font-medium text-white">
+                          Cover
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeImage(index)
+                        }}
+                        className="absolute right-2 top-2 rounded-full bg-zinc-900/80 p-1.5 text-zinc-400 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
 
             <Card hover={false} className="mb-6 p-6">
@@ -269,6 +438,8 @@ export default function NewListingPage() {
           </form>
         </motion.div>
       </main>
+
+      <SellingAdviceModal isOpen={showAdvice} onClose={() => setShowAdvice(false)} />
     </div>
   )
 }

@@ -14,9 +14,13 @@ interface FilterBarProps {
 const categoryOptions = [
   { value: '', label: 'All Categories' },
   { value: 'webapp', label: 'Web App' },
+  { value: 'website', label: 'Website' },
+  { value: 'extension', label: 'Extension' },
+  { value: 'desktop', label: 'Desktop' },
   { value: 'mobile', label: 'Mobile' },
   { value: 'game', label: 'Game' },
   { value: 'api', label: 'API' },
+  { value: 'os', label: 'OS' },
   { value: 'other', label: 'Other' },
 ]
 

@@ -1,4 +1,4 @@
-export type Category = 'webapp' | 'mobile' | 'game' | 'api' | 'other'
+export type Category = 'webapp' | 'website' | 'extension' | 'desktop' | 'mobile' | 'game' | 'api' | 'os' | 'other'
 export type ListingStatus = 'active' | 'sold' | 'draft'
 export type SortOption = 'newest' | 'oldest' | 'price_low' | 'price_high' | 'completion'
 
@@ -36,6 +36,7 @@ export interface ListingFilters {
   maxCompletion?: number
   search?: string
   sort?: SortOption
+  page?: number
 }
 
 export interface Database {

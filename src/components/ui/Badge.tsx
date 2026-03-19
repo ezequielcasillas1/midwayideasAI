@@ -43,9 +43,13 @@ Badge.displayName = 'Badge'
 
 const categoryColors: Record<string, VariantProps<typeof badgeVariants>['variant']> = {
   webapp: 'primary',
+  website: 'success',
+  extension: 'info',
+  desktop: 'primary',
   mobile: 'info',
   game: 'success',
   api: 'warning',
+  os: 'danger',
   other: 'default',
 }
 
@@ -53,10 +57,22 @@ interface CategoryBadgeProps extends Omit<BadgeProps, 'variant'> {
   category: string
 }
 
+const categoryLabels: Record<string, string> = {
+  webapp: 'Web App',
+  website: 'Website',
+  extension: 'Extension',
+  desktop: 'Desktop',
+  mobile: 'Mobile',
+  game: 'Game',
+  api: 'API',
+  os: 'OS',
+  other: 'Other',
+}
+
 const CategoryBadge = forwardRef<HTMLSpanElement, CategoryBadgeProps>(
   ({ category, className, ...props }, ref) => {
     const variant = categoryColors[category] || 'default'
-    const label = category.charAt(0).toUpperCase() + category.slice(1)
+    const label = categoryLabels[category] || category.charAt(0).toUpperCase() + category.slice(1)
     
     return (
       <Badge ref={ref} variant={variant} className={className} {...props}>

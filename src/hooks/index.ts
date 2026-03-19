@@ -6,5 +6,6 @@ export {
   useMyListings,
   useCreateListing, 
   useUpdateListing, 
-  useDeleteListing 
+  useDeleteListing,
+  ITEMS_PER_PAGE
 } from './useListings'

@@ -2,20 +2,94 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { mockListings, USE_MOCK_DATA } from '@/lib/mockData'
 import type { Listing, ListingFilters } from '@/types'
+
+export const ITEMS_PER_PAGE = 9
+
+interface PaginatedResult {
+  items: Listing[]
+  total: number
+}
+
+function filterMockListings(listings: Listing[], filters?: ListingFilters): PaginatedResult {
+  let result = listings.filter(l => l.status === 'active')
+
+  if (filters?.category) {
+    result = result.filter(l => l.category === filters.category)
+  }
+
+  if (filters?.search) {
+    const search = filters.search.toLowerCase()
+    result = result.filter(l => 
+      l.title.toLowerCase().includes(search) || 
+      l.description.toLowerCase().includes(search)
+    )
+  }
+
+  if (filters?.minPrice !== undefined) {
+    result = result.filter(l => l.price >= filters.minPrice!)
+  }
+
+  if (filters?.maxPrice !== undefined) {
+    result = result.filter(l => l.price <= filters.maxPrice!)
+  }
+
+  if (filters?.minCompletion !== undefined) {
+    result = result.filter(l => l.completion_percent >= filters.minCompletion!)
+  }
+
+  if (filters?.maxCompletion !== undefined) {
+    result = result.filter(l => l.completion_percent <= filters.maxCompletion!)
+  }
+
+  switch (filters?.sort) {
+    case 'oldest':
+      result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      break
+    case 'price_low':
+      result.sort((a, b) => a.price - b.price)
+      break
+    case 'price_high':
+      result.sort((a, b) => b.price - a.price)
+      break
+    case 'completion':
+      result.sort((a, b) => b.completion_percent - a.completion_percent)
+      break
+    default:
+      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+
+  const total = result.length
+  const start = (filters?.page || 0) * ITEMS_PER_PAGE
+  const paginatedResult = result.slice(start, start + ITEMS_PER_PAGE)
+
+  return { items: paginatedResult, total }
+}
 
 export function useListings(filters?: ListingFilters) {
   const [listings, setListings] = useState<Listing[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
 
   const fetchListings = useCallback(async () => {
     setLoading(true)
     setError(null)
 
+    if (USE_MOCK_DATA) {
+      const { items, total } = filterMockListings(mockListings, filters)
+      setListings(items)
+      setTotalCount(total)
+      setLoading(false)
+      return
+    }
+
     let query = supabase
       .from('listings')
-      .select('*, seller:users(*)')
+      .select('*, seller:users(*)', { count: 'exact' })
       .eq('status', 'active')
 
     if (filters?.category) {
@@ -59,13 +133,18 @@ export function useListings(filters?: ListingFilters) {
         query = query.order('created_at', { ascending: false })
     }
 
-    const { data, error: fetchError } = await query
+    const start = (filters?.page || 0) * ITEMS_PER_PAGE
+    query = query.range(start, start + ITEMS_PER_PAGE - 1)
+
+    const { data, error: fetchError, count } = await query
 
     if (fetchError) {
       setError(fetchError)
       setListings([])
+      setTotalCount(0)
     } else {
       setListings(data || [])
+      setTotalCount(count || 0)
     }
     setLoading(false)
   }, [filters])
@@ -74,7 +153,7 @@ export function useListings(filters?: ListingFilters) {
     fetchListings()
   }, [fetchListings])
 
-  return { listings, loading, error, refetch: fetchListings }
+  return { listings, loading, error, totalCount, totalPages, refetch: fetchListings }
 }
 
 export function useListing(id: string) {
@@ -85,6 +164,14 @@ export function useListing(id: string) {
   useEffect(() => {
     const fetchListing = async () => {
       setLoading(true)
+
+      if (USE_MOCK_DATA) {
+        const found = mockListings.find(l => l.id === id) || null
+        setListing(found)
+        setLoading(false)
+        return
+      }
+
       const { data, error: fetchError } = await supabase
         .from('listings')
         .select('*, seller:users(*)')
@@ -115,6 +202,13 @@ export function useMyListings() {
 
   const fetchMyListings = useCallback(async () => {
     setLoading(true)
+
+    if (USE_MOCK_DATA) {
+      setListings(mockListings)
+      setLoading(false)
+      return
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {

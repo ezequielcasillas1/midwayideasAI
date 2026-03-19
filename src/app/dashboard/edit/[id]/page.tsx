@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -13,9 +13,13 @@ import type { Category, ListingStatus } from '@/types'
 
 const categoryOptions = [
   { value: 'webapp', label: 'Web App' },
+  { value: 'website', label: 'Website (Agency, E-commerce, etc.)' },
+  { value: 'extension', label: 'Web App Extension' },
+  { value: 'desktop', label: 'Desktop App' },
   { value: 'mobile', label: 'Mobile App' },
   { value: 'game', label: 'Game' },
   { value: 'api', label: 'API / Backend' },
+  { value: 'os', label: 'Operating System' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -25,11 +29,10 @@ const statusOptions = [
   { value: 'sold', label: 'Sold' },
 ]
 
-export default function EditListingPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
+export default function EditListingPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const { listing, loading: listingLoading, error: listingError } = useListing(resolvedParams.id)
+  const { listing, loading: listingLoading, error: listingError } = useListing(params.id)
   const { updateListing, loading: updateLoading } = useUpdateListing()
 
   const [title, setTitle] = useState('')
@@ -87,7 +90,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
     }
 
     try {
-      await updateListing(resolvedParams.id, {
+      await updateListing(params.id, {
         title,
         description,
         category,
