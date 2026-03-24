@@ -19,8 +19,8 @@
 - [ ] **`STRIPE_SECRET_KEY`** — server only (Connect, PaymentIntents, Identity sessions)
 - [ ] **`STRIPE_PUBLISHABLE_KEY`** — use `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` if Stripe.js / Elements runs in the browser; otherwise keep server-only per your wiring
 - [ ] **`STRIPE_WEBHOOK_SECRET`** — verify Stripe webhooks (payments + Identity results)
-- [ ] **`PERSPECTIVE_API_KEY`** — Perspective API (Google Cloud)
-- [ ] **`OPENAI_API_KEY`** — OpenAI Moderation API
+- [ ] **`TISANE_API_KEY`** — Tisane Labs API (toxicity/spam detection, replaces Perspective API)
+- [ ] **`OPENAI_API_KEY`** — OpenAI Moderation API (policy violations)
 
 ## Twilio (plan § 7.1 — via Supabase Phone Auth)
 
@@ -41,8 +41,8 @@ Configured in **Supabase Dashboard** + provider consoles:
 
 - [ ] **Stripe** — account; enable **Connect**; enable **Identity** in Dashboard
 - [ ] **Twilio** — account; credentials + purchased number → Supabase
-- [ ] **Perspective API** — enabled in **Google Cloud** project → API key → `PERSPECTIVE_API_KEY`
-- [ ] **OpenAI** — API key → `OPENAI_API_KEY`
+- [ ] **Tisane Labs** — sign up at [tisane.ai](https://tisane.ai) → API key → `TISANE_API_KEY` (free tier: 50K req/mo)
+- [ ] **OpenAI** — API key → `OPENAI_API_KEY` (moderation endpoint is free)
 
 ## Hosting & DNS (`remember.mdc`)
 
