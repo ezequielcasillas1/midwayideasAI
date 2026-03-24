@@ -11,3 +11,9 @@
 **Commit:** `f5d8236` — branch `MW0.5` → `origin/MW0.5`
 **Files:** instructions/infrastructure-api-keys-checklist.md
 **Result:** Documentation updated for API keys infrastructure checklist.
+
+### [2026-03-24] - Feature build plans added
+**Status:** SUCCESS
+**Commit:** `6d67f93` — branch `MW0.5` → `origin/MW0.5`
+**Files:** plans/leaderboard-profile-membership.md, plans/security-enhancements.md, plans/membership-system.md, plans/prospects-dashboard.md, plans/viewcount-feature.md
+**Result:** Copied and committed 5 feature roadmap plans from .cursor/plans to repo.
