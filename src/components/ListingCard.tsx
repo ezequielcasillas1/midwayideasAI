@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { ExternalLink, Github, DollarSign } from 'lucide-react'
 import { Card, Badge, CategoryBadge } from '@/components/ui'
 import { MidwayMeter } from './MidwayMeter'
+import { FeaturedBadge } from '@/features/listings'
 import type { Listing } from '@/types'
 
 interface ListingCardProps {
@@ -20,6 +21,9 @@ export function ListingCard({ listing, index = 0 }: ListingCardProps) {
     minimumFractionDigits: 0,
   }).format(listing.price)
 
+  const isFeatured = listing.is_featured && 
+    (!listing.featured_until || new Date(listing.featured_until) > new Date())
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -27,7 +31,7 @@ export function ListingCard({ listing, index = 0 }: ListingCardProps) {
       transition={{ duration: 0.4, delay: index * 0.1 }}
     >
       <Link href={`/listing/${listing.id}`}>
-        <Card glow className="group h-full overflow-hidden">
+        <Card glow className={`group h-full overflow-hidden ${isFeatured ? 'ring-2 ring-amber-500/50' : ''}`}>
           <div className="relative aspect-video w-full overflow-hidden bg-zinc-800">
             {listing.images?.[0] ? (
               <Image
@@ -42,6 +46,11 @@ export function ListingCard({ listing, index = 0 }: ListingCardProps) {
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent" />
+            {isFeatured && (
+              <div className="absolute top-3 left-3">
+                <FeaturedBadge size="sm" />
+              </div>
+            )}
             <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
               <CategoryBadge category={listing.category} />
               <div className="flex gap-1.5">

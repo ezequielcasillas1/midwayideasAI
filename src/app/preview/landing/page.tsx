@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { MidwayMeter } from '@/components/MidwayMeter'
+import { MembershipTiers } from '@/features/membership'
 
 const features = [
   {
@@ -318,6 +319,8 @@ export default function LandingPreviewPage() {
           </div>
         </div>
       </section>
+
+      <MembershipTiers />
 
       <section className="px-4 py-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">

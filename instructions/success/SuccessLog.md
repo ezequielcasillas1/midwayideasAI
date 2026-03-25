@@ -17,3 +17,8 @@
 **Commit:** `6d67f93` — branch `MW0.5` → `origin/MW0.5`
 **Files:** plans/leaderboard-profile-membership.md, plans/security-enhancements.md, plans/membership-system.md, plans/prospects-dashboard.md, plans/viewcount-feature.md
 **Result:** Copied and committed 5 feature roadmap plans from .cursor/plans to repo.
+
+### [2026-03-24] - Negative Points System & Membership Fix
+**Status:** SUCCESS
+**Files:** membership-config.ts, points-service.ts, review-service.ts, flag-service.ts, types/index.ts, 000_listings.sql, 002_reviews_and_flags.sql
+**Result:** All tiers 1000pt cap, deductPoints() with floor at 0, -5pts for ≤2 star reviews, flag/ban system, SQL migrations created and applied.

@@ -11,7 +11,8 @@ import { useAuth } from '@/hooks/useAuth'
 
 const navLinks = [
   { href: '/browse', label: 'Browse' },
-  { href: '/preview/landing', label: 'Preview' },
+  { href: '/dashboard/analytics', label: 'Analytics' },
+  { href: '/community', label: 'Community' },
 ]
 
 export function Navbar() {

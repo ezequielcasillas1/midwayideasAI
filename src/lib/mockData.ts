@@ -1,4 +1,6 @@
-import type { Listing, User } from '@/types'
+import type { Listing, User, CommunityAnnouncement, CofounderRequest } from '@/types'
+import type { AnalyticsOverview, ListingPerformance, DailyViewData } from '@/features/analytics/services/analytics-service'
+import type { SovereignMember } from '@/features/community/services/community-service'
 
 export const mockUser: User = {
   id: 'mock-user-001',
@@ -7,6 +9,143 @@ export const mockUser: User = {
   avatar_url: null,
   created_at: '2024-01-01T00:00:00Z',
 }
+
+export const mockSovereignMembers: SovereignMember[] = [
+  {
+    id: 'sovereign-001',
+    email: 'alex@startup.io',
+    display_name: 'Alex Chen',
+    avatar_url: null,
+    joined_at: '2024-02-15T10:00:00Z',
+  },
+  {
+    id: 'sovereign-002',
+    email: 'maria@techventures.com',
+    display_name: 'Maria Rodriguez',
+    avatar_url: null,
+    joined_at: '2024-02-20T14:30:00Z',
+  },
+  {
+    id: 'sovereign-003',
+    email: 'james@buildfaster.dev',
+    display_name: 'James Wilson',
+    avatar_url: null,
+    joined_at: '2024-03-01T09:00:00Z',
+  },
+  {
+    id: 'sovereign-004',
+    email: 'sarah@indiemaker.co',
+    display_name: 'Sarah Thompson',
+    avatar_url: null,
+    joined_at: '2024-03-10T16:45:00Z',
+  },
+]
+
+export const mockAnnouncements: CommunityAnnouncement[] = [
+  {
+    id: 'ann-001',
+    title: 'Welcome to the Sovereign Community!',
+    content: 'Thank you for being one of our founding members. This exclusive space is where we share early updates, gather feedback, and build MIDWAY together. Your voice matters here.',
+    author_id: 'admin-001',
+    is_pinned: true,
+    published_at: '2024-02-01T10:00:00Z',
+    created_at: '2024-02-01T10:00:00Z',
+    updated_at: '2024-02-01T10:00:00Z',
+  },
+  {
+    id: 'ann-002',
+    title: 'New Feature: Analytics Dashboard',
+    content: 'Duke and Sovereign members now have access to detailed analytics. Track your listing views, see performance trends, and understand your audience better. Check it out in your dashboard!',
+    author_id: 'admin-001',
+    is_pinned: false,
+    published_at: '2024-03-15T14:00:00Z',
+    created_at: '2024-03-15T14:00:00Z',
+    updated_at: '2024-03-15T14:00:00Z',
+  },
+  {
+    id: 'ann-003',
+    title: 'Co-founder Program Now Open',
+    content: 'As a Sovereign member, you can now apply to become a co-founder of MIDWAY. Submit your partnership request through the dashboard. Looking forward to hearing your ideas!',
+    author_id: 'admin-001',
+    is_pinned: false,
+    published_at: '2024-03-20T09:30:00Z',
+    created_at: '2024-03-20T09:30:00Z',
+    updated_at: '2024-03-20T09:30:00Z',
+  },
+]
+
+export const mockCofounderRequests: (CofounderRequest & { user: User })[] = [
+  {
+    id: 'cfr-001',
+    user_id: 'sovereign-001',
+    status: 'pending',
+    message: 'I have 10 years of experience building marketplaces. Led product at a YC startup. Would love to help scale MIDWAY and bring my network of indie developers.',
+    admin_notes: null,
+    reviewed_by: null,
+    reviewed_at: null,
+    created_at: '2024-03-18T10:00:00Z',
+    updated_at: '2024-03-18T10:00:00Z',
+    user: {
+      id: 'sovereign-001',
+      email: 'alex@startup.io',
+      display_name: 'Alex Chen',
+      avatar_url: null,
+      created_at: '2024-02-15T10:00:00Z',
+    },
+  },
+  {
+    id: 'cfr-002',
+    user_id: 'sovereign-002',
+    status: 'in_discussion',
+    message: 'Former engineer at Stripe. Passionate about helping creators monetize their work. I can help with payments infrastructure and growth strategies.',
+    admin_notes: 'Great background, scheduled call for next week',
+    reviewed_by: 'admin-001',
+    reviewed_at: '2024-03-16T15:00:00Z',
+    created_at: '2024-03-15T11:30:00Z',
+    updated_at: '2024-03-16T15:00:00Z',
+    user: {
+      id: 'sovereign-002',
+      email: 'maria@techventures.com',
+      display_name: 'Maria Rodriguez',
+      avatar_url: null,
+      created_at: '2024-02-20T14:30:00Z',
+    },
+  },
+]
+
+export const mockAnalyticsOverview: AnalyticsOverview = {
+  totalViews: 12847,
+  totalListings: 8,
+  totalPoints: 450,
+  viewsToday: 127,
+  viewsThisWeek: 892,
+  viewsThisMonth: 3456,
+}
+
+export const mockListingPerformance: ListingPerformance[] = [
+  { listingId: 'mock-001', listingTitle: 'SaaS Dashboard Starter Kit', views: 3240, uniqueViewers: 2180 },
+  { listingId: 'mock-004', listingTitle: 'REST API Boilerplate', views: 2890, uniqueViewers: 1950 },
+  { listingId: 'mock-006', listingTitle: 'AI Content Generator Tool', views: 2150, uniqueViewers: 1680 },
+  { listingId: 'mock-014', listingTitle: 'Real-time Collaboration Whiteboard', views: 1820, uniqueViewers: 1340 },
+  { listingId: 'mock-008', listingTitle: 'GraphQL API Gateway', views: 1540, uniqueViewers: 1120 },
+  { listingId: 'mock-016', listingTitle: 'Webhook Management Service', views: 1207, uniqueViewers: 890 },
+]
+
+export const mockDailyViews: DailyViewData[] = (() => {
+  const data: DailyViewData[] = []
+  const now = new Date()
+  for (let i = 30; i >= 0; i--) {
+    const date = new Date(now)
+    date.setDate(date.getDate() - i)
+    const baseViews = Math.floor(Math.random() * 150) + 50
+    data.push({
+      date: date.toISOString().split('T')[0],
+      views: baseViews + Math.floor(Math.random() * 50),
+      uniqueViewers: Math.floor(baseViews * 0.7) + Math.floor(Math.random() * 30),
+    })
+  }
+  return data
+})()
 
 export const mockListings: Listing[] = [
   {
@@ -23,6 +162,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: true,
+    featured_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: '2024-03-15T10:00:00Z',
     updated_at: '2024-03-15T10:00:00Z',
   },
@@ -40,6 +181,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-03-10T14:30:00Z',
     updated_at: '2024-03-10T14:30:00Z',
   },
@@ -57,6 +200,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: true,
+    featured_until: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: '2024-03-08T09:15:00Z',
     updated_at: '2024-03-08T09:15:00Z',
   },
@@ -74,6 +219,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-03-05T16:45:00Z',
     updated_at: '2024-03-05T16:45:00Z',
   },
@@ -91,6 +238,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-03-01T11:20:00Z',
     updated_at: '2024-03-01T11:20:00Z',
   },
@@ -108,6 +257,8 @@ export const mockListings: Listing[] = [
     status: 'draft',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-28T08:00:00Z',
     updated_at: '2024-02-28T08:00:00Z',
   },
@@ -125,6 +276,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-25T13:30:00Z',
     updated_at: '2024-02-25T13:30:00Z',
   },
@@ -142,6 +295,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-20T10:00:00Z',
     updated_at: '2024-02-20T10:00:00Z',
   },
@@ -159,6 +314,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-15T15:45:00Z',
     updated_at: '2024-02-15T15:45:00Z',
   },
@@ -176,6 +333,8 @@ export const mockListings: Listing[] = [
     status: 'sold',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-10T09:30:00Z',
     updated_at: '2024-02-10T09:30:00Z',
   },
@@ -193,6 +352,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-08T14:00:00Z',
     updated_at: '2024-02-08T14:00:00Z',
   },
@@ -210,6 +371,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-05T11:30:00Z',
     updated_at: '2024-02-05T11:30:00Z',
   },
@@ -227,6 +390,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-02-03T09:00:00Z',
     updated_at: '2024-02-03T09:00:00Z',
   },
@@ -244,6 +409,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: true,
+    featured_until: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: '2024-01-30T16:00:00Z',
     updated_at: '2024-01-30T16:00:00Z',
   },
@@ -261,6 +428,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-28T10:15:00Z',
     updated_at: '2024-01-28T10:15:00Z',
   },
@@ -278,6 +447,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-25T13:45:00Z',
     updated_at: '2024-01-25T13:45:00Z',
   },
@@ -295,6 +466,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-22T08:30:00Z',
     updated_at: '2024-01-22T08:30:00Z',
   },
@@ -312,6 +485,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-20T15:00:00Z',
     updated_at: '2024-01-20T15:00:00Z',
   },
@@ -329,6 +504,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-18T11:20:00Z',
     updated_at: '2024-01-18T11:20:00Z',
   },
@@ -346,6 +523,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-15T09:45:00Z',
     updated_at: '2024-01-15T09:45:00Z',
   },
@@ -363,6 +542,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-12T14:30:00Z',
     updated_at: '2024-01-12T14:30:00Z',
   },
@@ -380,6 +561,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-10T10:00:00Z',
     updated_at: '2024-01-10T10:00:00Z',
   },
@@ -397,6 +580,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-08T16:15:00Z',
     updated_at: '2024-01-08T16:15:00Z',
   },
@@ -414,6 +599,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-05T12:00:00Z',
     updated_at: '2024-01-05T12:00:00Z',
   },
@@ -431,6 +618,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-03T08:00:00Z',
     updated_at: '2024-01-03T08:00:00Z',
   },
@@ -448,6 +637,8 @@ export const mockListings: Listing[] = [
     status: 'active',
     seller_id: 'mock-user-001',
     seller: mockUser,
+    is_featured: false,
+    featured_until: null,
     created_at: '2024-01-01T10:30:00Z',
     updated_at: '2024-01-01T10:30:00Z',
   },

@@ -43,21 +43,29 @@ function filterMockListings(listings: Listing[], filters?: ListingFilters): Pagi
     result = result.filter(l => l.completion_percent <= filters.maxCompletion!)
   }
 
+  const sortByFeaturedFirst = (a: Listing, b: Listing) => {
+    const aFeatured = a.is_featured && (!a.featured_until || new Date(a.featured_until) > new Date())
+    const bFeatured = b.is_featured && (!b.featured_until || new Date(b.featured_until) > new Date())
+    if (aFeatured && !bFeatured) return -1
+    if (!aFeatured && bFeatured) return 1
+    return 0
+  }
+
   switch (filters?.sort) {
     case 'oldest':
-      result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      result.sort((a, b) => sortByFeaturedFirst(a, b) || new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
       break
     case 'price_low':
-      result.sort((a, b) => a.price - b.price)
+      result.sort((a, b) => sortByFeaturedFirst(a, b) || a.price - b.price)
       break
     case 'price_high':
-      result.sort((a, b) => b.price - a.price)
+      result.sort((a, b) => sortByFeaturedFirst(a, b) || b.price - a.price)
       break
     case 'completion':
-      result.sort((a, b) => b.completion_percent - a.completion_percent)
+      result.sort((a, b) => sortByFeaturedFirst(a, b) || b.completion_percent - a.completion_percent)
       break
     default:
-      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      result.sort((a, b) => sortByFeaturedFirst(a, b) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   }
 
   const total = result.length
@@ -115,6 +123,8 @@ export function useListings(filters?: ListingFilters) {
     if (filters?.maxCompletion !== undefined) {
       query = query.lte('completion_percent', filters.maxCompletion)
     }
+
+    query = query.order('is_featured', { ascending: false })
 
     switch (filters?.sort) {
       case 'oldest':
