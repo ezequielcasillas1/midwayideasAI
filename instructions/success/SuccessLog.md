@@ -22,3 +22,9 @@
 **Status:** SUCCESS
 **Files:** membership-config.ts, points-service.ts, review-service.ts, flag-service.ts, types/index.ts, 000_listings.sql, 002_reviews_and_flags.sql
 **Result:** All tiers 1000pt cap, deductPoints() with floor at 0, -5pts for ≤2 star reviews, flag/ban system, SQL migrations created and applied.
+
+### [2026-03-25] - Universal Prospects + Stripe Connect Escrow
+**Status:** SUCCESS
+**Commit:** `379bd7b` — branch `MW0.5` → `origin/MW0.5`
+**Files:** 88 files - prospects system, payments, notifications, captcha bypass, admin dashboard enhancements
+**Result:** Captcha bypass (3pts), prospect tracking with scoring, Stripe Connect Express seller onboarding, escrow payments with 5% platform fee, transactions dashboard, extended user profiles.
