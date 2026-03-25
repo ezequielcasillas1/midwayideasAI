@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Settings, CreditCard, Zap, ExternalLink, Loader2 } from 'lucide-react'
+import { Settings, CreditCard, Zap, ExternalLink, Loader2, Coins } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { MembershipBadge } from './MembershipBadge'
 import { PointsDisplay } from './PointsDisplay'
+import { BuyPointsModal } from './BuyPointsModal'
 import type { MembershipTier } from '../types'
 
 interface MembershipSettingsProps {
@@ -35,6 +36,7 @@ export function MembershipSettings({
 }: MembershipSettingsProps) {
   const [toggling, setToggling] = useState(false)
   const [openingPortal, setOpeningPortal] = useState(false)
+  const [buyPointsOpen, setBuyPointsOpen] = useState(false)
 
   const handleToggleBeta = async () => {
     setToggling(true)
@@ -80,7 +82,18 @@ export function MembershipSettings({
         </div>
 
         <div>
-          <p className="mb-2 text-sm text-zinc-400">Points Balance</p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm text-zinc-400">Points Balance</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setBuyPointsOpen(true)}
+              className="gap-1 text-amber-400 hover:text-amber-300"
+            >
+              <Coins className="h-3.5 w-3.5" />
+              Buy Points
+            </Button>
+          </div>
           <PointsDisplay
             points={points}
             cap={pointsCap}
@@ -147,6 +160,12 @@ export function MembershipSettings({
           </div>
         )}
       </div>
+
+      <BuyPointsModal
+        isOpen={buyPointsOpen}
+        onClose={() => setBuyPointsOpen(false)}
+        currentPoints={points}
+      />
     </Card>
   )
 }

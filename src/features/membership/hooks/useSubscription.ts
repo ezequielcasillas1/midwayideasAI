@@ -85,9 +85,18 @@ export function useSubscription(): UseSubscriptionReturn {
   }, [user?.id])
 
   const createCheckout = useCallback(async (tier: MembershipTier): Promise<CheckoutSession> => {
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session?.access_token) {
+      throw new Error('Not authenticated')
+    }
+
     const response = await fetch('/api/stripe/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({ tier }),
     })
 
@@ -100,9 +109,18 @@ export function useSubscription(): UseSubscriptionReturn {
   }, [])
 
   const openPortal = useCallback(async (): Promise<PortalSession> => {
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session?.access_token) {
+      throw new Error('Not authenticated')
+    }
+
     const response = await fetch('/api/stripe/portal', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
     })
 
     if (!response.ok) {

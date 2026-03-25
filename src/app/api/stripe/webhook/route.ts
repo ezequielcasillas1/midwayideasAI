@@ -94,6 +94,13 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.user_id
+  const purchaseType = session.metadata?.type
+
+  if (purchaseType === 'points_purchase') {
+    await handlePointsPurchase(session)
+    return
+  }
+
   const tier = session.metadata?.tier as MembershipTier
 
   if (!userId || !tier) {
@@ -350,4 +357,46 @@ async function handleTransferCreated(transfer: Stripe.Transfer) {
       data: { transaction_id: transactionId },
     })
   }
+}
+
+async function handlePointsPurchase(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.user_id
+  const pointsAmount = parseInt(session.metadata?.points_amount || '0', 10)
+  const packageId = session.metadata?.package_id
+
+  if (!userId || !pointsAmount) {
+    console.error('Missing metadata in points purchase session')
+    return
+  }
+
+  const { data: membership } = await supabaseAdmin
+    .from('memberships')
+    .select('points')
+    .eq('user_id', userId)
+    .single()
+
+  const currentPoints = membership?.points || 0
+  const newTotal = currentPoints + pointsAmount
+
+  await supabaseAdmin
+    .from('point_transactions')
+    .insert({
+      user_id: userId,
+      amount: pointsAmount,
+      reason: `Purchased points package: ${packageId}`,
+      multiplier_applied: 1.0,
+    })
+
+  await supabaseAdmin
+    .from('memberships')
+    .update({ points: newTotal })
+    .eq('user_id', userId)
+
+  await supabaseAdmin.from('notifications').insert({
+    user_id: userId,
+    type: 'points_purchased',
+    title: 'Points Added',
+    message: `${pointsAmount} points have been added to your account.`,
+    data: { points_amount: pointsAmount, package_id: packageId },
+  })
 }

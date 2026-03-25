@@ -236,3 +236,26 @@ export function canUpgradeTo(currentTier: MembershipTier, targetTier: Membership
   const targetIndex = TIER_ORDER.indexOf(targetTier)
   return targetIndex > currentIndex
 }
+
+export const POINTS_MAX_PURCHASE_DOLLARS = 10
+
+export function calculatePointsForDollars(dollars: number): number {
+  if (dollars < 1) return 0
+  if (dollars > POINTS_MAX_PURCHASE_DOLLARS) dollars = POINTS_MAX_PURCHASE_DOLLARS
+  
+  const n = Math.floor(dollars)
+  return 25 + 2.5 * (n - 1) * (n + 2)
+}
+
+export function getPointsBreakdown(): { dollars: number; points: number; bonus: number }[] {
+  const breakdown = []
+  
+  for (let i = 1; i <= POINTS_MAX_PURCHASE_DOLLARS; i++) {
+    const points = calculatePointsForDollars(i)
+    const basePoints = i * 25
+    const bonus = points - basePoints
+    breakdown.push({ dollars: i, points, bonus: bonus > 0 ? bonus : 0 })
+  }
+  
+  return breakdown
+}

@@ -28,3 +28,13 @@
 **Commit:** `379bd7b` — branch `MW0.5` → `origin/MW0.5`
 **Files:** 88 files - prospects system, payments, notifications, captcha bypass, admin dashboard enhancements
 **Result:** Captcha bypass (3pts), prospect tracking with scoring, Stripe Connect Express seller onboarding, escrow payments with 5% platform fee, transactions dashboard, extended user profiles.
+
+### [2026-03-25] - HCaptcha dependency fix
+**Status:** SUCCESS
+**Files:** package.json, node_modules
+**Result:** Reinstalled missing @hcaptcha/react-hcaptcha dependency, cleared .next cache, restarted dev server. Build now compiles successfully.
+
+### [2026-03-25] - Buy Points feature
+**Status:** SUCCESS
+**Files:** membership-config.ts, points-checkout/route.ts, webhook/route.ts, useBuyPoints.ts, BuyPointsModal.tsx, MembershipSettings.tsx
+**Result:** Custom points purchase system with $1-$10 input, scaling bonus algorithm (25pts base + increasing bonus), info panel showing breakdown.
