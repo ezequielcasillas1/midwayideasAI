@@ -1,5 +1,48 @@
 import { supabase } from '@/lib/supabase'
 import type { CommunityAnnouncement, User } from '@/types'
+import { moderateCommentContent, type ModerationCheckResult } from '@/lib/moderation'
+
+export interface ContentModerationResult {
+  canProceed: boolean
+  moderation: ModerationCheckResult | null
+  error?: string
+}
+
+export async function checkAnnouncementContent(
+  title: string,
+  content: string
+): Promise<ContentModerationResult> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const combinedText = `${title}\n\n${content}`
+
+  try {
+    const result = await moderateCommentContent(
+      combinedText,
+      session?.access_token
+    )
+
+    if (!result.approved) {
+      return {
+        canProceed: false,
+        moderation: result,
+        error: result.flags.length > 0 
+          ? `Content flagged: ${result.flags.slice(0, 3).join(', ')}`
+          : 'Content did not pass moderation',
+      }
+    }
+
+    return {
+      canProceed: true,
+      moderation: result,
+    }
+  } catch (error) {
+    console.error('Announcement moderation check failed:', error)
+    return {
+      canProceed: true,
+      moderation: null,
+    }
+  }
+}
 
 export interface SovereignMember {
   id: string

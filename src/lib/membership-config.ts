@@ -5,6 +5,8 @@ export const EARNING_RATE_ENABLED = process.env.NEXT_PUBLIC_EARNING_RATE_ENABLED
 export const NEGATIVE_REVIEW_PENALTY = 5
 export const NEGATIVE_REVIEW_THRESHOLD = 2
 
+export const CAPTCHA_BYPASS_COST = 3
+
 export interface TierConfig {
   name: string
   price: number

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
@@ -13,15 +14,39 @@ import {
   Mail,
   Share2,
   Heart,
-  AlertCircle
+  AlertCircle,
+  ShoppingCart
 } from 'lucide-react'
 import { Navbar } from '@/components'
 import { Button, Badge, CategoryBadge, Card } from '@/components/ui'
 import { MidwayMeter } from '@/components/MidwayMeter'
-import { useListing } from '@/hooks'
+import { InterestButton } from '@/components/InterestButton'
+import { BuyNowButton } from '@/components/BuyNowButton'
+import { useListing, useAuth } from '@/hooks'
+import { supabase } from '@/lib/supabase'
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const { listing, loading, error } = useListing(params.id)
+  const { user } = useAuth()
+  const [sellerHasPayments, setSellerHasPayments] = useState(false)
+
+  useEffect(() => {
+    if (listing?.seller_id) {
+      checkSellerPayments(listing.seller_id)
+    }
+  }, [listing?.seller_id])
+
+  async function checkSellerPayments(sellerId: string) {
+    const { data } = await supabase
+      .from('connected_accounts')
+      .select('charges_enabled, payouts_enabled')
+      .eq('user_id', sellerId)
+      .single()
+
+    setSellerHasPayments(data?.charges_enabled && data?.payouts_enabled)
+  }
+
+  const isOwnListing = user?.id === listing?.seller_id
 
   if (loading) {
     return (
@@ -179,22 +204,43 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                 </div>
               </div>
 
-              {listing.status === 'active' ? (
+              {listing.status === 'active' && !isOwnListing ? (
                 <div className="space-y-3">
-                  <Button className="w-full">
-                    <Mail className="h-4 w-4" />
-                    Contact Seller
-                  </Button>
+                  {sellerHasPayments && (
+                    <BuyNowButton
+                      listingId={listing.id}
+                      listingTitle={listing.title}
+                      price={listing.price}
+                      sellerHasPayments={sellerHasPayments}
+                      className="w-full"
+                    />
+                  )}
+                  
+                  <InterestButton
+                    listingId={listing.id}
+                    className="w-full"
+                    variant="default"
+                  />
+                  
                   <div className="flex gap-2">
-                    <Button variant="secondary" className="flex-1">
-                      <Heart className="h-4 w-4" />
-                      Save
-                    </Button>
                     <Button variant="secondary" className="flex-1">
                       <Share2 className="h-4 w-4" />
                       Share
                     </Button>
                   </div>
+                  
+                  {!sellerHasPayments && (
+                    <p className="text-center text-xs text-zinc-500">
+                      Direct payment not available. Express interest to contact seller.
+                    </p>
+                  )}
+                </div>
+              ) : listing.status === 'active' && isOwnListing ? (
+                <div className="rounded-lg bg-zinc-800 p-4 text-center">
+                  <p className="font-medium text-zinc-300">This is your listing</p>
+                  <Link href="/dashboard" className="mt-2 inline-block text-sm text-violet-400 hover:text-violet-300">
+                    Manage in dashboard
+                  </Link>
                 </div>
               ) : (
                 <div className="rounded-lg bg-zinc-800 p-4 text-center">

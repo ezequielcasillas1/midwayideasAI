@@ -4,12 +4,30 @@ export type SortOption = 'newest' | 'oldest' | 'price_low' | 'price_high' | 'com
 export type MembershipTier = 'citizen' | 'knight' | 'baron' | 'duke' | 'sovereign'
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'incomplete'
 
+export type BudgetRange = 'under_10k' | '10k_50k' | '50k_100k' | '100k_plus'
+export type InvestmentTimeline = 'immediately' | '1_3_months' | '3_6_months' | 'exploring'
+export type ProspectStatus = 'interested' | 'contacted' | 'converted'
+export type ProspectSource = 'message' | 'interest_button'
+export type TransactionStatus = 'pending' | 'completed' | 'refunded' | 'disputed'
+
 export interface User {
   id: string
   email: string
   display_name: string | null
   avatar_url: string | null
   created_at: string
+  bio?: string | null
+  website?: string | null
+  linkedin_url?: string | null
+  twitter_url?: string | null
+  instagram_url?: string | null
+  budget_range?: BudgetRange | null
+  investment_timeline?: InvestmentTimeline | null
+  trust_score?: number
+  trust_level?: string
+  phone_verified?: boolean
+  id_verified?: boolean
+  profile_complete?: boolean
 }
 
 export interface Membership {
@@ -176,6 +194,72 @@ export interface AdminActivityLog {
   target_type: string
   target_id: string | null
   details: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface Prospect {
+  id: string
+  listing_id: string
+  user_id: string
+  seller_id: string
+  status: ProspectStatus
+  source: ProspectSource
+  message: string | null
+  viewed_at: string | null
+  created_at: string
+  updated_at: string
+  user?: User
+  listing?: { id: string; title: string; price: number }
+  prospect_score?: number
+}
+
+export interface ConnectedAccount {
+  id: string
+  user_id: string
+  stripe_account_id: string
+  onboarding_complete: boolean
+  charges_enabled: boolean
+  payouts_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Transaction {
+  id: string
+  listing_id: string
+  buyer_id: string
+  seller_id: string
+  amount: number
+  platform_fee: number
+  seller_amount: number
+  stripe_payment_intent_id: string
+  stripe_transfer_id: string | null
+  status: TransactionStatus
+  escrow_released_at: string | null
+  created_at: string
+  updated_at: string
+  listing?: Listing
+  buyer?: User
+  seller?: User
+}
+
+export interface EscrowHold {
+  id: string
+  transaction_id: string
+  amount: number
+  release_requested_at: string | null
+  released_at: string | null
+  created_at: string
+}
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: 'new_prospect' | 'prospect_contacted' | 'payment_received' | 'escrow_released' | 'transaction_complete'
+  title: string
+  message: string
+  data: Record<string, unknown> | null
+  read_at: string | null
   created_at: string
 }
 

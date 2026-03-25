@@ -5,11 +5,15 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
   Shield, 
+  ShieldCheck,
   Crown, 
   Handshake, 
   Megaphone, 
   BarChart3, 
-  Lock 
+  Lock,
+  Package,
+  History,
+  Users
 } from 'lucide-react'
 import { Card } from '@/components/ui'
 import { useAdmin } from '../hooks/useAdmin'
@@ -21,9 +25,13 @@ interface AdminLayoutProps {
 
 const navItems = [
   { href: '/admin', label: 'Overview', icon: BarChart3 },
+  { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/sovereigns', label: 'Sovereigns', icon: Crown },
-  { href: '/admin/cofounders', label: 'Co-founder Requests', icon: Handshake },
+  { href: '/admin/cofounders', label: 'Co-founders', icon: Handshake },
+  { href: '/admin/listings', label: 'Listings', icon: Package },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
+  { href: '/admin/moderation', label: 'Moderation', icon: ShieldCheck },
+  { href: '/admin/activity', label: 'Activity Log', icon: History },
 ]
 
 export function AdminLayout({ children }: AdminLayoutProps) {

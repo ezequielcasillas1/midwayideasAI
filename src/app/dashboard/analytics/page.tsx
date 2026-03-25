@@ -7,7 +7,7 @@ export default function AnalyticsPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 pb-8 pt-24 sm:px-6 lg:px-8">
         <AnalyticsDashboard />
       </main>
     </div>

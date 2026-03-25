@@ -9,7 +9,10 @@ import { ArrowLeft, Save, Plus, X, Upload, ImageIcon, Lightbulb } from 'lucide-r
 import { Navbar, SellingAdviceModal } from '@/components'
 import { Button, Input, Select, Card } from '@/components/ui'
 import { MidwayMeter } from '@/components/MidwayMeter'
-import { useAuth, useCreateListing } from '@/hooks'
+import { useAuth, useCreateListing, useCaptcha, useCaptchaBypass } from '@/hooks'
+import { HCaptcha } from '@/components/HCaptcha'
+import { shouldRequireCaptcha } from '@/lib/captcha-config'
+import { useMembership } from '@/features/membership/hooks/useMembership'
 import type { Category, ListingStatus } from '@/types'
 
 const MAX_IMAGES = 3
@@ -57,6 +60,12 @@ export default function NewListingPage() {
   const [images, setImages] = useState<ImagePreview[]>([])
   const [dragActive, setDragActive] = useState(false)
   const [showAdvice, setShowAdvice] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaError, setCaptchaError] = useState('')
+  const [captchaBypassed, setCaptchaBypassed] = useState(false)
+  const { verifyToken } = useCaptcha()
+  const { membership } = useMembership()
+  const { canBypass, handleBypass, currentPoints } = useCaptchaBypass()
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -137,10 +146,25 @@ export default function NewListingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setCaptchaError('')
 
     if (!title || !description || !price) {
       setError('Please fill in all required fields')
       return
+    }
+
+    if (shouldRequireCaptcha() && !captchaToken && !captchaBypassed) {
+      setCaptchaError('Please complete the captcha verification')
+      return
+    }
+
+    if (shouldRequireCaptcha() && captchaToken && !captchaBypassed) {
+      const isValid = await verifyToken(captchaToken)
+      if (!isValid) {
+        setCaptchaError('Captcha verification failed, please try again')
+        setCaptchaToken(null)
+        return
+      }
     }
 
     try {
@@ -423,6 +447,51 @@ export default function NewListingPage() {
                 />
               </div>
             </Card>
+
+            {shouldRequireCaptcha() && !captchaBypassed && (
+              <Card hover={false} className="mb-6 p-6">
+                <h2 className="mb-4 text-lg font-semibold text-white">Verification</h2>
+                <HCaptcha
+                  onVerify={(token) => {
+                    setCaptchaToken(token)
+                    setCaptchaError('')
+                  }}
+                  onExpire={() => {
+                    setCaptchaToken(null)
+                    setCaptchaError('Captcha expired, please verify again')
+                  }}
+                  onError={(err) => setCaptchaError(`Captcha error: ${err}`)}
+                  onBypass={async () => {
+                    const success = await handleBypass()
+                    if (success) {
+                      setCaptchaBypassed(true)
+                      setCaptchaError('')
+                    }
+                    return success
+                  }}
+                  canBypass={canBypass}
+                  currentPoints={currentPoints}
+                  showBypassOption={true}
+                />
+                {captchaError && (
+                  <p className="mt-2 text-center text-sm text-red-400">{captchaError}</p>
+                )}
+                {captchaToken && (
+                  <p className="mt-2 text-center text-sm text-green-400">Verified</p>
+                )}
+              </Card>
+            )}
+            
+            {captchaBypassed && (
+              <Card hover={false} className="mb-6 border-green-500/30 p-6">
+                <div className="flex items-center gap-3 text-green-400">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Verification bypassed with points</span>
+                </div>
+              </Card>
+            )}
 
             <div className="flex gap-4">
               <Link href="/dashboard" className="flex-1">

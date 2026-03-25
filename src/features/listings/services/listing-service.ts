@@ -1,5 +1,62 @@
 import { supabase } from '@/lib/supabase'
 import type { Listing } from '@/types'
+import { moderateListingContent, type ModerationCheckResult } from '@/lib/moderation'
+
+export interface ListingModerationResult {
+  canProceed: boolean
+  moderation: ModerationCheckResult | null
+  error?: string
+}
+
+export async function checkListingContent(
+  title: string,
+  description: string,
+  price?: number,
+  repoUrl?: string,
+  demoUrl?: string
+): Promise<ListingModerationResult> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const urls = [repoUrl, demoUrl].filter(Boolean) as string[]
+
+  try {
+    const result = await moderateListingContent(
+      title,
+      description,
+      price,
+      urls,
+      session?.access_token
+    )
+
+    if (!result.approved) {
+      return {
+        canProceed: false,
+        moderation: result,
+        error: result.flags.length > 0 
+          ? `Content flagged: ${result.flags.slice(0, 3).join(', ')}`
+          : 'Content did not pass moderation',
+      }
+    }
+
+    if (result.requiresReview) {
+      return {
+        canProceed: true,
+        moderation: result,
+        error: 'Your listing will be reviewed before publishing',
+      }
+    }
+
+    return {
+      canProceed: true,
+      moderation: result,
+    }
+  } catch (error) {
+    console.error('Listing moderation check failed:', error)
+    return {
+      canProceed: true,
+      moderation: null,
+    }
+  }
+}
 
 export async function toggleFeaturedListing(
   listingId: string,

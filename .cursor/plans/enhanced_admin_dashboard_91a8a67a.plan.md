@@ -4,28 +4,28 @@ overview: Add comprehensive admin features including detail modals, edit capabil
 todos:
   - id: base-components
     content: Create AdminModal and InfoTooltip base components
-    status: pending
+    status: completed
   - id: search-filter
     content: Create AdminSearchBar and AdminFilters shared components
-    status: pending
+    status: completed
   - id: user-modal
     content: Create UserDetailModal with profile, listings, points history, and management actions
-    status: pending
+    status: completed
   - id: edit-announcements
     content: Add edit functionality to AnnouncementsManager
-    status: pending
+    status: completed
   - id: listings-page
     content: Create listings management page with ListingDetailModal
-    status: pending
+    status: completed
   - id: export
     content: Create export service and ExportButton for CSV downloads
-    status: pending
+    status: completed
   - id: activity-log
     content: Create activity log page to view admin actions
-    status: pending
+    status: completed
   - id: enhanced-cofounders
     content: Add admin notes, email link, and user profile link to co-founder requests
-    status: pending
+    status: completed
 isProject: false
 ---
 

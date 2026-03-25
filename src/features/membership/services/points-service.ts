@@ -112,4 +112,71 @@ export async function deductPoints(
   return { deductedPoints: actualDeduction, newTotal, flooredAt }
 }
 
+export interface SpendResult {
+  success: boolean
+  newBalance: number
+  error?: string
+}
+
+export async function spendPoints(
+  userId: string,
+  amount: number,
+  reason: string
+): Promise<SpendResult> {
+  const { data: membership, error: fetchError } = await supabase
+    .from('memberships')
+    .select('points')
+    .eq('user_id', userId)
+    .single()
+
+  if (fetchError || !membership) {
+    return { success: false, newBalance: 0, error: 'Could not fetch membership' }
+  }
+
+  if (membership.points < amount) {
+    return { 
+      success: false, 
+      newBalance: membership.points, 
+      error: `Insufficient points. Need ${amount}, have ${membership.points}` 
+    }
+  }
+
+  const newBalance = membership.points - amount
+
+  const { error: txError } = await supabase
+    .from('point_transactions')
+    .insert({
+      user_id: userId,
+      amount: -amount,
+      reason,
+      multiplier_applied: 1.0,
+    })
+
+  if (txError) {
+    return { success: false, newBalance: membership.points, error: 'Failed to record transaction' }
+  }
+
+  const { error: updateError } = await supabase
+    .from('memberships')
+    .update({ points: newBalance })
+    .eq('user_id', userId)
+
+  if (updateError) {
+    return { success: false, newBalance: membership.points, error: 'Failed to update balance' }
+  }
+
+  return { success: true, newBalance }
+}
+
+export async function getUserPoints(userId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('memberships')
+    .select('points')
+    .eq('user_id', userId)
+    .single()
+
+  if (error || !data) return 0
+  return data.points
+}
+
 export { getPointsCap, getEarningRate }

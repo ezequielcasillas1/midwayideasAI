@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Crown, Send, Loader2, Lock, Handshake } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
+import { HCaptcha } from '@/components/HCaptcha'
+import { useCaptcha, useCaptchaBypass } from '@/hooks'
+import { shouldRequireCaptcha } from '@/lib/captcha-config'
 import { useCofounderRequest } from '../hooks/useCofounderRequest'
 import { CofounderStatus } from './CofounderStatus'
 
@@ -11,6 +14,11 @@ export function CofounderRequestCard() {
   const { request, canRequest, loading, submitting, submitRequest } = useCofounderRequest()
   const [message, setMessage] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaError, setCaptchaError] = useState('')
+  const [captchaBypassed, setCaptchaBypassed] = useState(false)
+  const { verifyToken } = useCaptcha()
+  const { canBypass, handleBypass, currentPoints } = useCaptchaBypass()
 
   if (loading) {
     return (
@@ -119,6 +127,22 @@ export function CofounderRequestCard() {
           animate={{ opacity: 1, y: 0 }}
           onSubmit={async (e) => {
             e.preventDefault()
+            setCaptchaError('')
+
+            if (shouldRequireCaptcha() && !captchaToken && !captchaBypassed) {
+              setCaptchaError('Please complete the captcha verification')
+              return
+            }
+
+            if (shouldRequireCaptcha() && captchaToken && !captchaBypassed) {
+              const isValid = await verifyToken(captchaToken)
+              if (!isValid) {
+                setCaptchaError('Captcha verification failed, please try again')
+                setCaptchaToken(null)
+                return
+              }
+            }
+
             await submitRequest(message)
           }}
           className="space-y-4"
@@ -136,6 +160,49 @@ export function CofounderRequestCard() {
               required
             />
           </div>
+
+          {shouldRequireCaptcha() && !captchaBypassed && (
+            <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-4">
+              <HCaptcha
+                onVerify={(token) => {
+                  setCaptchaToken(token)
+                  setCaptchaError('')
+                }}
+                onExpire={() => {
+                  setCaptchaToken(null)
+                  setCaptchaError('Captcha expired, please verify again')
+                }}
+                onError={(err) => setCaptchaError(`Captcha error: ${err}`)}
+                onBypass={async () => {
+                  const success = await handleBypass()
+                  if (success) {
+                    setCaptchaBypassed(true)
+                    setCaptchaError('')
+                  }
+                  return success
+                }}
+                canBypass={canBypass}
+                currentPoints={currentPoints}
+                showBypassOption={true}
+              />
+              {captchaError && (
+                <p className="mt-2 text-center text-sm text-red-400">{captchaError}</p>
+              )}
+              {captchaToken && (
+                <p className="mt-2 text-center text-sm text-green-400">Verified</p>
+              )}
+            </div>
+          )}
+          
+          {captchaBypassed && (
+            <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-green-400">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-sm">Verification bypassed with points</span>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <Button
               type="button"
@@ -144,7 +211,7 @@ export function CofounderRequestCard() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting || !message.trim()}>
+            <Button type="submit" disabled={submitting || !message.trim() || (shouldRequireCaptcha() && !captchaToken && !captchaBypassed)}>
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

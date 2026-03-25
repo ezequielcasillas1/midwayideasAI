@@ -57,6 +57,30 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account
+        await handleAccountUpdated(account)
+        break
+      }
+
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
+        await handlePaymentIntentSucceeded(paymentIntent)
+        break
+      }
+
+      case 'payment_intent.payment_failed': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
+        await handlePaymentIntentFailed(paymentIntent)
+        break
+      }
+
+      case 'transfer.created': {
+        const transfer = event.data.object as Stripe.Transfer
+        await handleTransferCreated(transfer)
+        break
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }
@@ -187,5 +211,143 @@ function mapStripeStatus(status: Stripe.Subscription.Status): string {
       return 'incomplete'
     default:
       return 'active'
+  }
+}
+
+async function handleAccountUpdated(account: Stripe.Account) {
+  const userId = account.metadata?.user_id
+
+  if (!userId) {
+    const { data: existingAccount } = await supabaseAdmin
+      .from('connected_accounts')
+      .select('user_id')
+      .eq('stripe_account_id', account.id)
+      .single()
+
+    if (!existingAccount) {
+      console.log('No user found for account:', account.id)
+      return
+    }
+
+    await supabaseAdmin
+      .from('connected_accounts')
+      .update({
+        charges_enabled: account.charges_enabled,
+        payouts_enabled: account.payouts_enabled,
+        details_submitted: account.details_submitted,
+        onboarding_complete: account.details_submitted && account.charges_enabled,
+        business_type: account.business_type,
+      })
+      .eq('stripe_account_id', account.id)
+
+    return
+  }
+
+  await supabaseAdmin
+    .from('connected_accounts')
+    .upsert({
+      user_id: userId,
+      stripe_account_id: account.id,
+      charges_enabled: account.charges_enabled,
+      payouts_enabled: account.payouts_enabled,
+      details_submitted: account.details_submitted,
+      onboarding_complete: account.details_submitted && account.charges_enabled,
+      business_type: account.business_type,
+    }, {
+      onConflict: 'user_id',
+    })
+}
+
+async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+  const transactionId = paymentIntent.metadata?.transaction_id
+
+  if (!transactionId) {
+    console.log('No transaction_id in payment intent metadata')
+    return
+  }
+
+  await supabaseAdmin
+    .from('transactions')
+    .update({
+      status: 'processing',
+      stripe_charge_id: paymentIntent.latest_charge as string,
+    })
+    .eq('id', transactionId)
+
+  await supabaseAdmin
+    .from('escrow_holds')
+    .update({ status: 'held' })
+    .eq('transaction_id', transactionId)
+
+  const { data: transaction } = await supabaseAdmin
+    .from('transactions')
+    .select('seller_id, listing_id')
+    .eq('id', transactionId)
+    .single()
+
+  if (transaction) {
+    const { data: listing } = await supabaseAdmin
+      .from('listings')
+      .select('title')
+      .eq('id', transaction.listing_id)
+      .single()
+
+    await supabaseAdmin.from('notifications').insert({
+      user_id: transaction.seller_id,
+      type: 'payment_received',
+      title: 'Payment Received',
+      message: `Payment received for "${listing?.title || 'your listing'}". Funds are held in escrow.`,
+      data: { transaction_id: transactionId },
+    })
+  }
+}
+
+async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+  const transactionId = paymentIntent.metadata?.transaction_id
+
+  if (!transactionId) return
+
+  await supabaseAdmin
+    .from('transactions')
+    .update({ status: 'failed' })
+    .eq('id', transactionId)
+}
+
+async function handleTransferCreated(transfer: Stripe.Transfer) {
+  const transactionId = transfer.metadata?.transaction_id
+
+  if (!transactionId) return
+
+  await supabaseAdmin
+    .from('transactions')
+    .update({
+      stripe_transfer_id: transfer.id,
+      status: 'completed',
+      escrow_released_at: new Date().toISOString(),
+    })
+    .eq('id', transactionId)
+
+  await supabaseAdmin
+    .from('escrow_holds')
+    .update({
+      status: 'released',
+      released_at: new Date().toISOString(),
+    })
+    .eq('transaction_id', transactionId)
+
+  const { data: transaction } = await supabaseAdmin
+    .from('transactions')
+    .select('seller_id, listing_id, seller_amount')
+    .eq('id', transactionId)
+    .single()
+
+  if (transaction) {
+    await supabaseAdmin.from('notifications').insert({
+      user_id: transaction.seller_id,
+      type: 'escrow_released',
+      title: 'Funds Released',
+      message: `$${(transaction.seller_amount / 100).toFixed(2)} has been released to your account.`,
+      data: { transaction_id: transactionId },
+    })
   }
 }
