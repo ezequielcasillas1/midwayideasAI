@@ -36,5 +36,6 @@
 
 ### [2026-03-25] - Buy Points feature
 **Status:** SUCCESS
+**Commit:** `e25cc32` — branch `MW0.5` → `origin/MW0.5`
 **Files:** membership-config.ts, points-checkout/route.ts, webhook/route.ts, useBuyPoints.ts, BuyPointsModal.tsx, MembershipSettings.tsx
-**Result:** Custom points purchase system with $1-$10 input, scaling bonus algorithm (25pts base + increasing bonus), info panel showing breakdown.
+**Result:** Custom points purchase system with $1-$10 input, scaling bonus algorithm (25pts base + increasing bonus), info panel showing breakdown, auth header fixes.
